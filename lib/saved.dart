@@ -28,15 +28,17 @@ class SavedPage extends StatefulWidget {
 }
 
 class _SavedPageState extends State<SavedPage> {
-  var log = Logger();
-  List<CarData> myList = [];
-
-
   @override
   void initState() {
-    getData();
+    setState(() {
+      getData();
+    });
     super.initState();
   }
+
+  var log = Logger();
+
+  List<CarData> myList = [];
 
   Future<void> getData() async {
     final database =
@@ -55,8 +57,16 @@ class _SavedPageState extends State<SavedPage> {
             totalPricePerMonthStr: item.totalPricePerMonthStr,
             pricePerMileStr: item.pricePerMileStr));
       }
+      setState(() {});
     });
-    log.i(myList.toString());
+  }
+
+  Future<void> deleteAll() async {
+    final database =
+    await $FloorAppDatabase.databaseBuilder('database.db').build();
+    var myDao = database.carDataDao;
+    myDao.deleteAllCarData();
+    getData();
   }
 
   @override
@@ -65,9 +75,19 @@ class _SavedPageState extends State<SavedPage> {
       appBar: AppBar(
         title: const Text('Saved'),
         actions: [
-          IconButton(onPressed: () async {
-            makeASnackBar("Delete Not working yet", context);
-          }, icon: const Icon(Icons.delete))
+          IconButton(
+              onPressed: () async {
+                deleteAll();
+                makeASnackBar("Deleted", context);
+              },
+              icon: const Icon(Icons.delete)),
+          IconButton(
+            onPressed: () {
+              myList.clear();
+              getData();
+            },
+            icon: const Icon(Icons.refresh),
+          )
         ],
       ),
       body: ListView(
@@ -147,8 +167,10 @@ class _SavedPageState extends State<SavedPage> {
             padding: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 16.0),
             child: Text(
               '\$${myList[index].pricePerMileStr} per mile',
-              style:
-                  const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold, color: Colors.purple),
+              style: const TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple),
             ),
           )
         ],
